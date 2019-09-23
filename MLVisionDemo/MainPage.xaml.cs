@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Media.Capture;
+using Windows.System.Display;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -25,6 +28,22 @@ namespace MLVisionDemo
         public MainPage()
         {
             this.InitializeComponent();
+            StartVideoPreviewAsync();
         }
+
+
+        private readonly DisplayRequest _displayRequest = new DisplayRequest();
+
+        private readonly MediaCapture _mediaCapture = new MediaCapture();
+
+        private async Task StartVideoPreviewAsync()
+        {
+            await _mediaCapture.InitializeAsync();
+            _displayRequest.RequestActive();
+
+            PreviewControl.Source = _mediaCapture;
+            await _mediaCapture.StartPreviewAsync();
+        }
+
     }
 }
