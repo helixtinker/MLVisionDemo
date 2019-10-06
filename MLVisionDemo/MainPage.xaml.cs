@@ -96,8 +96,11 @@ namespace MLVisionDemo
                     await _mediaCapture.GetPreviewFrameAsync(previewFrame);
 
                     // Evaluate the image
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => StatusText.Text = $"Analyzing frame {DateTime.Now.ToLongTimeString()}");
-
+                    //await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => StatusText.Text = $"Analyzing frame {DateTime.Now.ToLongTimeString()}");
+                    await Task.Run(async () =>
+                    {
+                        await EvaluateVideoFrameAsync(previewFrame);
+                    });
                 }
             }
             catch (Exception ex)
@@ -109,5 +112,42 @@ namespace MLVisionDemo
                 _frameProcessingSemaphore.Release();
             }
         }
+
+        private async Task EvaluateVideoFrameAsync(VideoFrame frame)
+        {
+            if (frame != null)
+            {
+                try
+                {
+
+                    MyCustomVisionModelInput inputData = new MyCustomVisionModelInput
+                    {
+                        Data = frame
+                    };
+                    var output = await _model.EvaluateAsync(inputData);
+
+                    var product = output.ClassLabel.GetAsVectorView()[0];
+                    var loss = output.Loss[0][product];
+                    var message = string.Join(",  ", product + " " + (loss * 100.0f).ToString("#0.00") + "%");
+                    var percent = loss * 100.0f;
+
+                    if (product != "deer")//just for debug testing
+                    {
+                        string isDeer = "deer!";
+                    }
+
+                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => StatusText.Text = message);
+                    Debug.WriteLine(message);
+
+                    // Insert Lines for SPI Display here
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"error: {ex.Message}");
+                }
+            }
+        }
+
+
     }
 }
